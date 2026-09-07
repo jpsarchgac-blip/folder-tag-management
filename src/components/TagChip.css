@@ -1,0 +1,40 @@
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--tag-color) 50%, transparent);
+  background: color-mix(in srgb, var(--tag-color) 15%, #1e293b);
+  color: #e2e8f0;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.tag-chip.small {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.tag-chip:hover {
+  background: color-mix(in srgb, var(--tag-color) 25%, #1e293b);
+}
+
+.tag-chip.selected {
+  background: color-mix(in srgb, var(--tag-color) 35%, #1e293b);
+  border-color: var(--tag-color);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tag-color) 40%, transparent);
+}
+
+.tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tag-color);
+  flex-shrink: 0;
+}
+
+.tag-chip.small .tag-dot {
+  width: 6px;
+  height: 6px;
+}
