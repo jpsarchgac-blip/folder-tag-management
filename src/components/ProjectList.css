@@ -75,11 +75,19 @@
 }
 
 .project-path {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-size: 11px;
   color: #64748b;
   word-break: break-all;
   font-family: Consolas, monospace;
+}
+
+.card-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #60a5fa;
+  margin-bottom: 8px;
 }
 
 .project-desc {

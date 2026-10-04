@@ -1,46 +1,59 @@
 import { useEffect, useState } from 'react'
-import type { Project, Tag, Comment, RepoStatus } from '../types'
-import { TagChip } from './TagChip'
-import { formatDate, generateId } from '../utils/format'
+import type { GitHubInfo, Project, Tag, Comment, RepoStatus, ProjectFolderStats, NodeProjectInfo } from '../types'
+import { TagTreePicker } from './TagTreePicker'
+import { PieChartView } from './PieChartView'
+import { GitHubRepoPicker } from './GitHubRepoPicker'
+import { GitActions } from './GitActions'
+import { ExcludedLanguageNotes } from './ExcludedLanguageNotes'
+import { formatDate, formatBytes, formatLines, generateId } from '../utils/format'
 import './ProjectDetail.css'
 
 interface ProjectDetailProps {
   project: Project | null
   tags: Tag[]
   comments: Comment[]
+  folderStats: ProjectFolderStats | null
+  statsLoading: boolean
+  onEnsureStats: () => void
   onSaveProject: (project: Project) => void
   onDeleteProject: (id: string) => void
   onSaveComment: (comment: Comment) => void
   onDeleteComment: (id: string) => void
+  onOpenSettings: () => void
 }
 
 export function ProjectDetail({
   project,
   tags,
   comments,
+  folderStats,
+  statsLoading,
+  onEnsureStats,
   onSaveProject,
   onDeleteProject,
   onSaveComment,
   onDeleteComment,
+  onOpenSettings,
 }: ProjectDetailProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [githubUrl, setGithubUrl] = useState('')
   const [commentBody, setCommentBody] = useState('')
   const [repoStatus, setRepoStatus] = useState<RepoStatus | null>(null)
   const [loadingStatus, setLoadingStatus] = useState(false)
+  const [nodeInfo, setNodeInfo] = useState<NodeProjectInfo | null>(null)
+  const [startingDev, setStartingDev] = useState(false)
+  const [devMessage, setDevMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!project) {
       setName('')
       setDescription('')
-      setGithubUrl('')
       setRepoStatus(null)
+      setDevMessage(null)
       return
     }
     setName(project.name)
     setDescription(project.description)
-    setGithubUrl(project.github?.url ?? '')
   }, [project])
 
   useEffect(() => {
@@ -62,6 +75,27 @@ export function ProjectDetail({
       cancelled = true
     }
   }, [project?.id, project?.github?.owner, project?.github?.repo])
+
+  useEffect(() => {
+    if (!project) {
+      setNodeInfo(null)
+      return
+    }
+    let cancelled = false
+    window.api.detectNodeProject(project.path).then((info) => {
+      if (!cancelled) setNodeInfo(info)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [project?.id, project?.path])
+
+  useEffect(() => {
+    if (!project || folderStats) return
+    onEnsureStats()
+  }, [project?.id, folderStats, onEnsureStats])
+
+  const isLoadingStats = statsLoading && !folderStats
 
   if (!project) {
     return (
@@ -94,33 +128,13 @@ export function ProjectDetail({
     const detected = await window.api.detectGitHub(project.path)
     if (detected) {
       onSaveProject({ ...project, github: detected })
-      setGithubUrl(detected.url)
     } else {
       alert('GitHub リモートが見つかりませんでした')
     }
   }
 
-  const handleSaveGitHubUrl = () => {
-    const trimmed = githubUrl.trim()
-    if (!trimmed) {
-      onSaveProject({ ...project, github: undefined })
-      return
-    }
-    const match = trimmed.match(/github\.com[/:]([^/]+)\/([^/.]+)/i)
-    if (!match) {
-      alert('有効な GitHub URL を入力してください')
-      return
-    }
-    const owner = match[1]
-    const repo = match[2]
-    onSaveProject({
-      ...project,
-      github: {
-        owner,
-        repo,
-        url: `https://github.com/${owner}/${repo}`,
-      },
-    })
+  const handleGitHubChange = (github: GitHubInfo | undefined) => {
+    onSaveProject({ ...project, github })
   }
 
   const handleAddComment = () => {
@@ -138,6 +152,25 @@ export function ProjectDetail({
   const handleDelete = () => {
     if (confirm(`「${project.name}」を削除しますか？`)) {
       onDeleteProject(project.id)
+    }
+  }
+
+  const handleStartDev = async () => {
+    setStartingDev(true)
+    setDevMessage(null)
+    try {
+      const result = await window.api.startDevServer(project.path)
+      if (result.success) {
+        setDevMessage(
+          result.alreadyRunning
+            ? '開発サーバーは既に起動している可能性があります'
+            : '開発サーバーを起動しました（新しいターミナルで npm run dev を実行中）',
+        )
+      } else {
+        setDevMessage(result.error ?? '起動に失敗しました')
+      }
+    } finally {
+      setStartingDev(false)
     }
   }
 
@@ -163,6 +196,65 @@ export function ProjectDetail({
         </button>
       </div>
 
+      {nodeInfo?.hasDevScript && (
+        <div className="detail-section dev-server-section">
+          <label>Node.js 開発サーバー</label>
+          {nodeInfo.packageName && (
+            <p className="dev-package-name">{nodeInfo.packageName}</p>
+          )}
+          <p className="dev-script-hint">npm run dev</p>
+          <button
+            type="button"
+            className="btn-primary dev-start-btn"
+            onClick={handleStartDev}
+            disabled={startingDev}
+          >
+            {startingDev ? '起動中...' : 'アプリを起動'}
+          </button>
+          {devMessage && <p className="status-hint">{devMessage}</p>}
+        </div>
+      )}
+
+      <div className="detail-section">
+        <label>フォルダ統計</label>
+        {isLoadingStats && <p className="status-hint">tokei で集計中...</p>}
+        {folderStats && (
+          <>
+            <div className="folder-stats-summary">
+              <div className="status-row">
+                <span>容量</span>
+                <span title="エクスプローラーの「サイズ」と同じ基準">{formatBytes(folderStats.sizeBytes)}</span>
+              </div>
+              <div className="status-row">
+                <span>コード行数</span>
+                <span>{formatLines(folderStats.totalLines)}</span>
+              </div>
+            </div>
+            {folderStats.error && <p className="status-error">{folderStats.error}</p>}
+            {folderStats.tokeiWarning && <p className="status-error">{folderStats.tokeiWarning}</p>}
+            {!folderStats.tokeiWarning &&
+              folderStats.languages.length === 0 &&
+              folderStats.totalLines === 0 &&
+              !folderStats.excludedLanguages?.length && (
+                <p className="status-hint">コードファイルが見つかりませんでした</p>
+              )}
+            {folderStats.languages.length > 0 && (
+              <PieChartView
+                title="言語別コード量"
+                data={folderStats.languages.map((l) => ({ name: l.language, value: l.lines }))}
+                valueFormatter={(v) => `${formatLines(v)} 行`}
+              />
+            )}
+            {folderStats.excludedLanguages && folderStats.excludedLanguages.length > 0 && (
+              <ExcludedLanguageNotes
+                items={folderStats.excludedLanguages}
+                projectName={project.name}
+              />
+            )}
+          </>
+        )}
+      </div>
+
       <div className="detail-section">
         <label>説明</label>
         <textarea
@@ -176,28 +268,29 @@ export function ProjectDetail({
 
       <div className="detail-section">
         <label>タグ</label>
-        <div className="tag-toggle-list">
-          {tags.map((tag) => (
-            <TagChip
-              key={tag.id}
-              tag={tag}
-              selected={project.tagIds.includes(tag.id)}
-              onClick={() => toggleTag(tag.id)}
-            />
-          ))}
-        </div>
+        <TagTreePicker
+          tags={tags}
+          selectedIds={project.tagIds}
+          onToggle={toggleTag}
+        />
       </div>
 
       <div className="detail-section">
-        <label>GitHub</label>
-        <input
-          value={githubUrl}
-          onChange={(e) => setGithubUrl(e.target.value)}
-          placeholder="https://github.com/owner/repo"
+        <label>Git</label>
+        <GitActions folderPath={project.path} />
+      </div>
+
+      <div className="detail-section github-section">
+        <label>GitHub リポジトリ</label>
+        <GitHubRepoPicker
+          value={project.github}
+          onChange={handleGitHubChange}
+          onOpenSettings={onOpenSettings}
         />
         <div className="github-actions">
-          <button type="button" className="btn-small" onClick={handleSaveGitHubUrl}>URLを保存</button>
-          <button type="button" className="btn-small btn-ghost" onClick={handleDetectGitHub}>remote再検知</button>
+          <button type="button" className="btn-small btn-ghost" onClick={handleDetectGitHub}>
+            git remote から自動設定
+          </button>
           {project.github && (
             <button type="button" className="btn-small btn-ghost" onClick={() => window.api.openUrl(project.github!.url)}>
               GitHubを開く

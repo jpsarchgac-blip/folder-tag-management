@@ -16,9 +16,10 @@ export function TagChip({ tag, selected, onClick, small }: TagChipProps) {
       className={`tag-chip ${selected ? 'selected' : ''} ${small ? 'small' : ''}`}
       style={{ '--tag-color': tag.color } as CSSProperties}
       onClick={onClick}
+      title={tag.name}
     >
       <span className="tag-dot" />
-      {tag.name}
+      <span className="tag-chip-label">{tag.name}</span>
     </button>
   )
 }

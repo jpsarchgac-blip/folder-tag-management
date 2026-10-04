@@ -2,13 +2,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { app, safeStorage } from 'electron'
 import type { AppData, Tag, Project, Comment } from '../../shared/types.js'
-
-const DEFAULT_TAGS: Tag[] = [
-  { id: 'tag-work', name: '仕事', color: '#3b82f6' },
-  { id: 'tag-personal', name: '個人', color: '#22c55e' },
-  { id: 'tag-learning', name: '学習', color: '#f59e0b' },
-  { id: 'tag-archive', name: 'アーカイブ', color: '#6b7280' },
-]
+import { removeProjectStatsCache } from './stats-cache-store.js'
 
 function getDataDir(): string {
   const dir = join(app.getPath('userData'), 'data')
@@ -28,7 +22,7 @@ function getTokenPath(): string {
 
 function createDefaultData(): AppData {
   return {
-    tags: DEFAULT_TAGS,
+    tags: [],
     projects: [],
     comments: [],
   }
@@ -44,8 +38,8 @@ export function loadData(): AppData {
   try {
     const raw = readFileSync(path, 'utf-8')
     const parsed = JSON.parse(raw) as AppData
-    if (!parsed.tags?.length) {
-      parsed.tags = DEFAULT_TAGS
+    if (!parsed.tags) {
+      parsed.tags = []
     }
     return parsed
   } catch {
@@ -77,26 +71,53 @@ export function deleteProject(id: string): void {
   data.projects = data.projects.filter((p) => p.id !== id)
   data.comments = data.comments.filter((c) => c.projectId !== id)
   saveData(data)
+  removeProjectStatsCache(id)
+}
+
+function collectDescendantIds(id: string, tags: Tag[]): string[] {
+  const ids = [id]
+  for (const child of tags.filter((t) => (t.parentId ?? null) === id)) {
+    ids.push(...collectDescendantIds(child.id, tags))
+  }
+  return ids
+}
+
+function wouldCreateCycle(tagId: string, parentId: string | null, tags: Tag[]): boolean {
+  if (!parentId) return false
+  if (parentId === tagId) return true
+  return collectDescendantIds(tagId, tags).includes(parentId)
 }
 
 export function saveTag(tag: Tag): Tag {
   const data = loadData()
-  const index = data.tags.findIndex((t) => t.id === tag.id)
+  const normalized: Tag = { ...tag, parentId: tag.parentId ?? null }
+
+  if (normalized.parentId === normalized.id) {
+    normalized.parentId = null
+  }
+
+  if (normalized.parentId && wouldCreateCycle(normalized.id, normalized.parentId, data.tags)) {
+    const existing = data.tags.find((t) => t.id === normalized.id)
+    normalized.parentId = existing?.parentId ?? null
+  }
+
+  const index = data.tags.findIndex((t) => t.id === normalized.id)
   if (index >= 0) {
-    data.tags[index] = tag
+    data.tags[index] = normalized
   } else {
-    data.tags.push(tag)
+    data.tags.push(normalized)
   }
   saveData(data)
-  return tag
+  return normalized
 }
 
 export function deleteTag(id: string): void {
   const data = loadData()
-  data.tags = data.tags.filter((t) => t.id !== id)
+  const toDelete = new Set(collectDescendantIds(id, data.tags))
+  data.tags = data.tags.filter((t) => !toDelete.has(t.id))
   data.projects = data.projects.map((p) => ({
     ...p,
-    tagIds: p.tagIds.filter((tid) => tid !== id),
+    tagIds: p.tagIds.filter((tid) => !toDelete.has(tid)),
   }))
   saveData(data)
 }
@@ -152,4 +173,55 @@ export function clearGitHubToken(): void {
 export function hasGitHubToken(): boolean {
   const token = loadGitHubToken()
   return Boolean(token && token.trim().length > 0)
+}
+
+function normalizeAppData(data: AppData): AppData {
+  return {
+    tags: data.tags.map((t) => ({ ...t, parentId: t.parentId ?? null })),
+    projects: data.projects,
+    comments: data.comments,
+  }
+}
+
+export function isValidAppData(data: unknown): data is AppData {
+  if (!data || typeof data !== 'object') return false
+  const candidate = data as AppData
+  return (
+    Array.isArray(candidate.tags) &&
+    Array.isArray(candidate.projects) &&
+    Array.isArray(candidate.comments)
+  )
+}
+
+export function importAppData(incoming: AppData, mode: 'merge' | 'replace'): AppData {
+  const normalizedIncoming = normalizeAppData(incoming)
+
+  if (mode === 'replace') {
+    saveData(normalizedIncoming)
+    return normalizedIncoming
+  }
+
+  const current = loadData()
+  const tagMap = new Map(current.tags.map((t) => [t.id, t]))
+  for (const tag of normalizedIncoming.tags) {
+    tagMap.set(tag.id, tag)
+  }
+
+  const projectMap = new Map(current.projects.map((p) => [p.id, p]))
+  for (const project of normalizedIncoming.projects) {
+    projectMap.set(project.id, project)
+  }
+
+  const commentMap = new Map(current.comments.map((c) => [c.id, c]))
+  for (const comment of normalizedIncoming.comments) {
+    commentMap.set(comment.id, comment)
+  }
+
+  const merged: AppData = {
+    tags: Array.from(tagMap.values()),
+    projects: Array.from(projectMap.values()),
+    comments: Array.from(commentMap.values()),
+  }
+  saveData(merged)
+  return merged
 }

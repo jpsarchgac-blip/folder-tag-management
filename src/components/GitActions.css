@@ -1,0 +1,85 @@
+.git-actions {
+  margin-top: 8px;
+}
+
+.git-status-summary {
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.git-branch {
+  font-family: Consolas, monospace;
+  color: #60a5fa;
+}
+
+.git-file-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  max-height: 140px;
+  overflow-y: auto;
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+}
+
+.git-file-list li {
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid #1f2937;
+}
+
+.git-file-list li:last-child {
+  border-bottom: none;
+}
+
+.git-file-status {
+  flex-shrink: 0;
+  width: 52px;
+  color: #94a3b8;
+}
+
+.git-file-path {
+  color: #cbd5e1;
+  word-break: break-all;
+  font-family: Consolas, monospace;
+}
+
+.git-file-more {
+  color: #64748b;
+  justify-content: center;
+}
+
+.git-commit-input {
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+
+.git-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.git-main-btn {
+  width: 100%;
+}
+
+.git-secondary-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.git-feedback-success {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #4ade80;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

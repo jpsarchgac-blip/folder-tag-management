@@ -1,0 +1,173 @@
+.github-repo-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.picker-current {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.picker-toggle {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  text-align: left;
+}
+
+.picker-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.picker-toggle:hover:not(:disabled) {
+  border-color: #475569;
+}
+
+.picker-value {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-chevron {
+  font-size: 10px;
+  color: #64748b;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.picker-notice {
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.picker-notice p {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.picker-hint {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+.picker-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.picker-dropdown-header {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  border-bottom: 1px solid #334155;
+}
+
+.picker-dropdown-header input {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+}
+
+.picker-dropdown-header .btn-small {
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.picker-dropdown input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #334155;
+  border-radius: 0;
+}
+
+.picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.picker-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #1f2937;
+  color: #e2e8f0;
+  text-align: left;
+  font-size: 13px;
+}
+
+.picker-item:hover {
+  background: #0f172a;
+}
+
+.picker-item.selected {
+  background: #1e3a5f;
+}
+
+.picker-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-item-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.picker-item-badge.public {
+  background: #14532d;
+  color: #86efac;
+}
+
+.picker-item-badge.private {
+  background: #3f3f46;
+  color: #d4d4d8;
+}
+
+.picker-item-lang {
+  font-size: 11px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.picker-empty {
+  padding: 16px;
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+}

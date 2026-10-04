@@ -1,11 +1,12 @@
-import type { Project, Tag } from '../types'
+import type { Project, Tag, ProjectFolderStats } from '../types'
 import { TagChip } from './TagChip'
-import { formatDate } from '../utils/format'
+import { formatDate, formatBytes, formatLines } from '../utils/format'
 import './ProjectList.css'
 
 interface ProjectListProps {
   projects: Project[]
   tags: Tag[]
+  statsMap: Record<string, ProjectFolderStats>
   selectedProjectId: string | null
   onSelect: (projectId: string) => void
   sortBy: 'updated' | 'name'
@@ -15,6 +16,7 @@ interface ProjectListProps {
 export function ProjectList({
   projects,
   tags,
+  statsMap,
   selectedProjectId,
   onSelect,
   sortBy,
@@ -39,37 +41,46 @@ export function ProjectList({
         </div>
       ) : (
         <div className="project-grid">
-          {projects.map((project) => (
-            <button
-              key={project.id}
-              type="button"
-              className={`project-card ${selectedProjectId === project.id ? 'selected' : ''}`}
-              onClick={() => onSelect(project.id)}
-            >
-              <div className="card-top">
-                <h3>{project.name}</h3>
-                {project.github && (
-                  <span className="github-badge" title={project.github.url}>GitHub</span>
+          {projects.map((project) => {
+            const stats = statsMap[project.id]
+            return (
+              <button
+                key={project.id}
+                type="button"
+                className={`project-card ${selectedProjectId === project.id ? 'selected' : ''}`}
+                onClick={() => onSelect(project.id)}
+              >
+                <div className="card-top">
+                  <h3>{project.name}</h3>
+                  {project.github && (
+                    <span className="github-badge" title={project.github.url}>GitHub</span>
+                  )}
+                </div>
+                <p className="project-path">{project.path}</p>
+                {stats && (
+                  <div className="card-stats">
+                    <span>{formatBytes(stats.sizeBytes)}</span>
+                    <span>{formatLines(stats.totalLines)} 行</span>
+                  </div>
                 )}
-              </div>
-              <p className="project-path">{project.path}</p>
-              {project.description && (
-                <p className="project-desc">{project.description}</p>
-              )}
-              <div className="card-tags">
-                {project.tagIds.map((tagId) => {
-                  const tag = getTag(tagId)
-                  return tag ? <TagChip key={tagId} tag={tag} small /> : null
-                })}
-              </div>
-              <div className="card-footer">
-                <span>更新: {formatDate(project.updatedAt)}</span>
-                {project.github && (
-                  <span className="repo-name">{project.github.owner}/{project.github.repo}</span>
+                {project.description && (
+                  <p className="project-desc">{project.description}</p>
                 )}
-              </div>
-            </button>
-          ))}
+                <div className="card-tags">
+                  {project.tagIds.map((tagId) => {
+                    const tag = getTag(tagId)
+                    return tag ? <TagChip key={tagId} tag={tag} small /> : null
+                  })}
+                </div>
+                <div className="card-footer">
+                  <span>更新: {formatDate(project.updatedAt)}</span>
+                  {project.github && (
+                    <span className="repo-name">{project.github.owner}/{project.github.repo}</span>
+                  )}
+                </div>
+              </button>
+            )
+          })}
         </div>
       )}
     </section>

@@ -5,28 +5,44 @@
   "main": "dist-electron/main.js",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build && tsc -p tsconfig.electron.json",
+    "dev": "npm run prepare-icon && vite",
+    "build": "npm run prepare-icon && tsc && vite build && tsc -p tsconfig.electron.json",
     "preview": "vite preview",
-    "electron:build": "npm run build && electron-builder"
+    "prepare-icon": "node scripts/prepare-icon.mjs",
+    "create-shortcut": "node scripts/create-shortcut.mjs",
+    "create-shortcut:packaged": "node scripts/create-shortcut.mjs --packaged",
+    "electron:pack": "npm run build && electron-builder --win dir",
+    "setup-shortcut": "npm run create-shortcut -- --packaged",
+    "electron:build": "npm run build && electron-builder && npm run create-shortcut -- --packaged --skip-pack"
   },
   "build": {
     "appId": "com.folder-tag-management.app",
     "productName": "Folder Tag Manager",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "files": [
       "dist/**/*",
       "dist-electron/**/*"
     ],
+    "icon": "build/icon.png",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Folder Tag Manager"
     }
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

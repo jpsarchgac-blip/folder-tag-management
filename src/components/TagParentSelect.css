@@ -1,0 +1,14 @@
+.tag-parent-select {
+  width: 100%;
+}
+
+.tag-move-select {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  margin-top: 4px;
+}

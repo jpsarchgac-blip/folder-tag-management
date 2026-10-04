@@ -1,0 +1,158 @@
+.stats-dashboard {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #1f2937;
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.stats-dashboard .panel-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+}
+
+.stats-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stats-refreshing-hint {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.stats-scroll-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.stats-loading,
+.stats-error {
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.stats-error {
+  color: #f87171;
+}
+
+.stats-tokei-warning {
+  margin: 0 20px 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #7f1d1d;
+  background: #1f1212;
+  color: #fca5a5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.stats-summary {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  flex-wrap: wrap;
+}
+
+.summary-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 20px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.stats-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 0 20px 20px;
+}
+
+.stats-per-folder-section {
+  padding: 0 20px 20px;
+}
+
+.stats-per-folder-section h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.stats-per-folder-charts {
+  padding: 0;
+}
+
+.stats-table-section {
+  padding: 0 20px 24px;
+}
+
+.stats-table-section h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #1f2937;
+}
+
+.stats-table th {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.stats-table td {
+  color: #cbd5e1;
+}
+
+.empty-row {
+  text-align: center;
+  color: #64748b;
+}
+
+.stats-per-folder-chart-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-excluded-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #fbbf24;
+}
